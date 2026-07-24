@@ -11,6 +11,9 @@ from config import (
 from database.database import setup_database
 
 
+# YOUR SERVER ID HERE
+GUILD_ID = 1523187103494832208
+
 
 intents = discord.Intents.all()
 
@@ -59,7 +62,13 @@ class FKGuard(commands.Bot):
                 )
 
 
-        await self.tree.sync()
+        # Sync commands globally
+        synced = await self.tree.sync()
+
+
+        print(
+            f"Synced {len(synced)} slash commands"
+        )
 
 
 

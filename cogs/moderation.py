@@ -257,29 +257,58 @@ Check:
     )
     async def warn(
         self,
-        interaction,
+        interaction: discord.Interaction,
         member: discord.Member,
         reason: str
     ):
 
-        await add_warning(
+        try:
 
-            member.id,
-            interaction.user.id,
-            reason,
-            get_time()
+            await add_warning(
 
-        )
+                member.id,
+                interaction.user.id,
+                reason,
+                get_time()
 
-
-        await interaction.response.send_message(
-
-            embed=warning(
-                f"{member.mention} warned.\nReason: {reason}"
             )
 
-        )
+            # DM the warned member
+            try:
 
+                await member.send(
+
+                    embed=warning(
+                        f"⚠️ You have received a warning in **{interaction.guild.name}**.\n\n"
+                        f"**Reason:** {reason}"
+                    )
+
+                )
+
+            except discord.Forbidden:
+                pass
+
+            await interaction.response.send_message(
+
+                embed=warning(
+                    f"⚠️ {member.mention} has been warned.\n\nReason: **{reason}**"
+                )
+
+            )
+
+        except Exception as e:
+
+            print(f"Warn Error: {e}")
+
+            await interaction.response.send_message(
+
+                embed=error(
+                    "Failed to warn the member."
+                ),
+
+                ephemeral=True
+
+            )
 
 
     # =====================
@@ -288,52 +317,61 @@ Check:
 
     @app_commands.command(
         name="warnings",
-        description="View warnings"
+        description="View a member's warnings"
     )
     async def warnings(
         self,
-        interaction,
+        interaction: discord.Interaction,
         member: discord.Member
     ):
 
-        data = await get_warnings(
-            member.id
-        )
+        try:
 
+            data = await get_warnings(
+                member.id
+            )
 
-        if not data:
+            if not data:
+
+                await interaction.response.send_message(
+
+                    embed=success(
+                        f"{member.mention} has no warnings."
+                    )
+
+                )
+
+                return
+
+            text = ""
+
+            for warn in data:
+
+                text += (
+                    f"**Warning ID:** {warn[0]}\n"
+                    f"**Reason:** {warn[3]}\n"
+                    f"**Date:** {warn[4]}\n\n"
+                )
 
             await interaction.response.send_message(
 
-                embed=success(
-                    "No warnings found."
-                )
+                embed=warning(text)
 
             )
 
-            return
+        except Exception as e:
 
+            print(f"Warnings Error: {e}")
 
-        text = ""
+            await interaction.response.send_message(
 
+                embed=error(
+                    "Failed to retrieve warnings."
+                ),
 
-        for warn in data:
+                ephemeral=True
 
-            text += (
-                f"ID: {warn[0]}\n"
-                f"Reason: {warn[3]}\n"
-                f"Time: {warn[4]}\n\n"
             )
-
-
-        await interaction.response.send_message(
-
-            embed=warning(
-                text
-            )
-
-        )
-
 
 
     # =====================
@@ -342,30 +380,44 @@ Check:
 
     @app_commands.command(
         name="clearwarnings",
-        description="Clear member warnings"
+        description="Clear all warnings for a member"
     )
     @app_commands.checks.has_permissions(
         administrator=True
     )
     async def clearwarnings(
         self,
-        interaction,
+        interaction: discord.Interaction,
         member: discord.Member
     ):
 
-        await clear_warnings(
-            member.id
-        )
+        try:
 
-
-        await interaction.response.send_message(
-
-            embed=success(
-                "Warnings cleared."
+            await clear_warnings(
+                member.id
             )
 
-        )
+            await interaction.response.send_message(
 
+                embed=success(
+                    f"✅ Cleared all warnings for {member.mention}."
+                )
+
+            )
+
+        except Exception as e:
+
+            print(f"ClearWarnings Error: {e}")
+
+            await interaction.response.send_message(
+
+                embed=error(
+                    "Failed to clear warnings."
+                ),
+
+                ephemeral=True
+
+            )
 
 
     # =====================
@@ -374,15 +426,112 @@ Check:
 
     @app_commands.command(
         name="clear",
-        description="Delete messages"
+        description="Delete a specific number of messages"
     )
     @app_commands.checks.has_permissions(
         manage_messages=True
     )
     async def clear(
         self,
-        interaction,
+        interaction: discord.Interaction,
         amount: int
+    ):
+
+        if amount < 1:
+
+            await interaction.response.send_message(
+
+                embed=error(
+                    "Amount must be at least 1."
+                ),
+
+                ephemeral=True
+
+            )
+
+            return
+
+
+        if amount > 100:
+
+            await interaction.response.send_message(
+
+                embed=error(
+                    "You can only delete up to 100 messages at a time."
+                ),
+
+                ephemeral=True
+
+            )
+
+            return
+
+
+        await interaction.response.defer(
+            ephemeral=True
+        )
+
+
+        try:
+
+            deleted = await interaction.channel.purge(
+                limit=amount
+            )
+
+
+            await interaction.followup.send(
+
+                embed=success(
+                    f"🧹 Deleted **{len(deleted)}** messages."
+                ),
+
+                ephemeral=True
+
+            )
+
+
+        except discord.Forbidden:
+
+            await interaction.followup.send(
+
+                embed=error(
+                    "I don't have permission to delete messages."
+                ),
+
+                ephemeral=True
+
+            )
+
+
+        except Exception as e:
+
+            print(f"Clear Error: {e}")
+
+            await interaction.followup.send(
+
+                embed=error(
+                    "An error occurred while deleting messages."
+                ),
+
+                ephemeral=True
+
+            )
+
+
+    # =====================
+    # CLEAR ALL MESSAGES
+    # =====================
+
+    @app_commands.command(
+        name="clearall",
+        description="Delete every message in this channel"
+    )
+    @app_commands.checks.has_permissions(
+        manage_messages=True
+    )
+    async def clearall(
+        self,
+        interaction: discord.Interaction
     ):
 
         await interaction.response.defer(
@@ -390,20 +539,50 @@ Check:
         )
 
 
-        deleted = await interaction.channel.purge(
-            limit=amount
-        )
+        try:
 
-
-        await interaction.followup.send(
-
-            embed=success(
-                f"Deleted {len(deleted)} messages."
+            deleted = await interaction.channel.purge(
+                limit=None
             )
 
-        )
+
+            await interaction.followup.send(
+
+                embed=success(
+                    f"🧹 Successfully deleted **{len(deleted)}** messages."
+                ),
+
+                ephemeral=True
+
+            )
 
 
+        except discord.Forbidden:
+
+            await interaction.followup.send(
+
+                embed=error(
+                    "I don't have permission to delete messages."
+                ),
+
+                ephemeral=True
+
+            )
+
+
+        except Exception as e:
+
+            print(f"ClearAll Error: {e}")
+
+            await interaction.followup.send(
+
+                embed=error(
+                    "Failed to clear this channel."
+                ),
+
+                ephemeral=True
+
+            )
 
     # =====================
     # LOCK
@@ -493,4 +672,4 @@ async def setup(bot):
 
     await bot.add_cog(
         Moderation(bot)
-    )python bot.py
+    )
