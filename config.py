@@ -15,6 +15,8 @@ OWNER_ID = int(
     os.getenv("OWNER_ID", 0)
 )
 
+GUILD_ID = 1523186859172167750
+
 
 # ==========================
 # DATABASE

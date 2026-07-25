@@ -7,17 +7,11 @@ from discord import app_commands
 
 from config import (
     TOKEN,
-    BOT_NAME
+    BOT_NAME,
+    GUILD_ID
 )
 
 from database.database import setup_database
-
-
-# ==========================
-# SERVER ID
-# ==========================
-
-GUILD_ID = 1523186859172167750
 
 
 # ==========================
