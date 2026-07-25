@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import time
+import datetime
 
 
 from utils.embeds import warning
@@ -28,6 +29,9 @@ class AutoMod(commands.Cog):
         if message.author.bot:
             return
 
+        if message.guild is None:
+            return
+
 
         content = message.content.lower()
 
@@ -41,17 +45,22 @@ class AutoMod(commands.Cog):
 
             if word in content:
 
-                await message.delete()
+                try:
 
-                await message.channel.send(
+                    await message.delete()
 
-                    embed=warning(
+                    await message.channel.send(
 
-                        f"{message.author.mention}, bad language is not allowed."
+                        embed=warning(
+
+                            f"{message.author.mention}, bad language is not allowed."
+
+                        )
 
                     )
 
-                )
+                except discord.Forbidden:
+                    pass
 
                 return
 
@@ -63,17 +72,22 @@ class AutoMod(commands.Cog):
 
         if "discord.gg/" in content:
 
-            await message.delete()
+            try:
 
-            await message.channel.send(
+                await message.delete()
 
-                embed=warning(
+                await message.channel.send(
 
-                    "Discord invites are not allowed."
+                    embed=warning(
+
+                        "Discord invites are not allowed."
+
+                    )
 
                 )
 
-            )
+            except discord.Forbidden:
+                pass
 
             return
 
@@ -85,17 +99,22 @@ class AutoMod(commands.Cog):
 
         if len(message.mentions) >= 5:
 
-            await message.delete()
+            try:
 
-            await message.channel.send(
+                await message.delete()
 
-                embed=warning(
+                await message.channel.send(
 
-                    "Mass mentioning is blocked."
+                    embed=warning(
+
+                        "Mass mentioning is blocked."
+
+                    )
 
                 )
 
-            )
+            except discord.Forbidden:
+                pass
 
             return
 
@@ -121,17 +140,22 @@ class AutoMod(commands.Cog):
 
             if caps / len(letters) > 0.7:
 
-                await message.delete()
+                try:
 
-                await message.channel.send(
+                    await message.delete()
 
-                    embed=warning(
+                    await message.channel.send(
 
-                        "Please avoid excessive caps."
+                        embed=warning(
+
+                            "Please avoid excessive caps."
+
+                        )
 
                     )
 
-                )
+                except discord.Forbidden:
+                    pass
 
                 return
 
@@ -141,7 +165,7 @@ class AutoMod(commands.Cog):
         # ANTI SPAM
         # ======================
 
-        now=time.time()
+        now = time.time()
 
 
         user = message.author.id
@@ -149,7 +173,7 @@ class AutoMod(commands.Cog):
 
         if user not in self.messages:
 
-            self.messages[user]=[]
+            self.messages[user] = []
 
 
 
@@ -161,27 +185,30 @@ class AutoMod(commands.Cog):
 
             x for x in self.messages[user]
 
-            if now-x < 5
+            if now - x < 5
 
         ]
 
 
-
         if len(self.messages[user]) >= 5:
 
-            await message.delete()
+            try:
 
+                await message.delete()
 
-            await message.author.timeout(
+            except discord.Forbidden:
+                pass
 
-                discord.utils.utcnow()
-                + discord.timedelta(
-                    seconds=30
-                ),
+            try:
 
-                reason="Spam"
+                await message.author.timeout(
+                    datetime.datetime.now(datetime.timezone.utc)
+                    + datetime.timedelta(seconds=30),
+                    reason="Spam"
+                )
 
-            )
+            except discord.Forbidden:
+                pass
 
 
 

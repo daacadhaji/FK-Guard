@@ -42,6 +42,9 @@ class Owner(commands.Cog):
     # =====================
     # SYNC
     # =====================
+    # Guild-scoped ONLY. Never call self.bot.tree.sync() with no
+    # guild here — that registers commands globally and causes every
+    # command to show up twice (once global, once guild-scoped).
 
     @app_commands.command(
         name="sync",
@@ -49,7 +52,7 @@ class Owner(commands.Cog):
     )
     async def sync(
         self,
-        interaction
+        interaction: discord.Interaction
     ):
 
         if not await self.owner_check(
@@ -87,10 +90,9 @@ class Owner(commands.Cog):
     # =====================
     # CLEAR GLOBAL COMMANDS
     # =====================
-    # One-time cleanup: removes any commands that were previously
-    # registered globally (e.g. from an old /sync call), which is
-    # what caused every command to show up twice. Run this once,
-    # then only ever use guild-scoped /sync from now on.
+    # One-time cleanup for any commands previously registered
+    # globally by mistake. Safe to run any time — if nothing is
+    # registered globally, it's a no-op.
 
     @app_commands.command(
         name="clearglobal",
@@ -98,7 +100,7 @@ class Owner(commands.Cog):
     )
     async def clearglobal(
         self,
-        interaction
+        interaction: discord.Interaction
     ):
 
         if not await self.owner_check(
@@ -140,7 +142,7 @@ class Owner(commands.Cog):
     )
     async def status(
         self,
-        interaction
+        interaction: discord.Interaction
     ):
 
         if not await self.owner_check(
@@ -180,7 +182,7 @@ Users:
     )
     async def shutdown(
         self,
-        interaction
+        interaction: discord.Interaction
     ):
 
         if not await self.owner_check(

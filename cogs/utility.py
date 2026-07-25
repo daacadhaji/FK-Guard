@@ -22,7 +22,7 @@ class Utility(commands.Cog):
     )
     async def ping(
         self,
-        interaction
+        interaction: discord.Interaction
     ):
 
         latency = round(
@@ -50,7 +50,7 @@ class Utility(commands.Cog):
     )
     async def userinfo(
         self,
-        interaction,
+        interaction: discord.Interaction,
         member: discord.Member = None
     ):
 
@@ -97,7 +97,7 @@ class Utility(commands.Cog):
     )
     async def serverinfo(
         self,
-        interaction
+        interaction: discord.Interaction
     ):
 
         guild = interaction.guild
@@ -145,7 +145,7 @@ class Utility(commands.Cog):
     )
     async def avatar(
         self,
-        interaction,
+        interaction: discord.Interaction,
         member: discord.Member = None
     ):
 
@@ -178,7 +178,7 @@ class Utility(commands.Cog):
     )
     async def roleinfo(
         self,
-        interaction,
+        interaction: discord.Interaction,
         role: discord.Role
     ):
 
@@ -214,7 +214,7 @@ class Utility(commands.Cog):
     )
     async def channelinfo(
         self,
-        interaction,
+        interaction: discord.Interaction,
         channel: discord.TextChannel
     ):
 
@@ -250,7 +250,7 @@ class Utility(commands.Cog):
     )
     async def botinfo(
         self,
-        interaction
+        interaction: discord.Interaction
     ):
 
 

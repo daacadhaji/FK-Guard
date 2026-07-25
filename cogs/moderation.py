@@ -597,32 +597,46 @@ Check:
     )
     async def lock(
         self,
-        interaction
+        interaction: discord.Interaction
     ):
 
-        overwrite = interaction.channel.overwrites_for(
-            interaction.guild.default_role
-        )
+        try:
 
-        overwrite.send_messages = False
-
-
-        await interaction.channel.set_permissions(
-
-            interaction.guild.default_role,
-
-            overwrite=overwrite
-
-        )
-
-
-        await interaction.response.send_message(
-
-            embed=success(
-                "Channel locked."
+            overwrite = interaction.channel.overwrites_for(
+                interaction.guild.default_role
             )
 
-        )
+            overwrite.send_messages = False
+
+
+            await interaction.channel.set_permissions(
+
+                interaction.guild.default_role,
+
+                overwrite=overwrite
+
+            )
+
+
+            await interaction.response.send_message(
+
+                embed=success(
+                    "Channel locked."
+                )
+
+            )
+
+        except discord.Forbidden:
+
+            await interaction.response.send_message(
+
+                embed=error(
+                    "I don't have permission to edit this channel."
+                ),
+
+                ephemeral=True
+
+            )
 
 
 
@@ -639,32 +653,46 @@ Check:
     )
     async def unlock(
         self,
-        interaction
+        interaction: discord.Interaction
     ):
 
-        overwrite = interaction.channel.overwrites_for(
-            interaction.guild.default_role
-        )
+        try:
 
-        overwrite.send_messages = True
-
-
-        await interaction.channel.set_permissions(
-
-            interaction.guild.default_role,
-
-            overwrite=overwrite
-
-        )
-
-
-        await interaction.response.send_message(
-
-            embed=success(
-                "Channel unlocked."
+            overwrite = interaction.channel.overwrites_for(
+                interaction.guild.default_role
             )
 
-        )
+            overwrite.send_messages = True
+
+
+            await interaction.channel.set_permissions(
+
+                interaction.guild.default_role,
+
+                overwrite=overwrite
+
+            )
+
+
+            await interaction.response.send_message(
+
+                embed=success(
+                    "Channel unlocked."
+                )
+
+            )
+
+        except discord.Forbidden:
+
+            await interaction.response.send_message(
+
+                embed=error(
+                    "I don't have permission to edit this channel."
+                ),
+
+                ephemeral=True
+
+            )
 
 
 

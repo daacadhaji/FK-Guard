@@ -82,6 +82,9 @@ class FKGuard(commands.Bot):
         # ==========================
         # SYNC GUILD COMMANDS
         # ==========================
+        # Guild-scoped ONLY. Never sync globally anywhere in this
+        # project — mixing global + guild syncs is what caused every
+        # command to show up twice in Discord.
 
         try:
 
@@ -89,12 +92,6 @@ class FKGuard(commands.Bot):
                 id=GUILD_ID
             )
 
-            # Remove previously synced guild commands
-            self.tree.clear_commands(
-                guild=guild
-            )
-
-            # Copy all loaded commands
             self.tree.copy_global_to(
                 guild=guild
             )
@@ -124,11 +121,15 @@ bot = FKGuard()
 
 
 # ==========================
-# GLOBAL SLASH COMMAND ERROR HANDLER
+# GLOBAL COMMAND ERROR HANDLER
 # ==========================
-# Handles errors from plain app_commands.command slash commands.
-# Without this, a failed permission check or unhandled exception
-# leaves the interaction with no response ("thinking..." forever).
+# Every command in this project is a plain app_commands.command, so
+# every error — permission checks, unexpected exceptions, anything —
+# flows through this single handler. There is no hybrid/prefix
+# command anywhere, so there is no second error pipe to maintain.
+# Without a handler like this, a failed check or a raised exception
+# leaves the interaction unanswered, which is what "thinking..."
+# forever looks like in Discord.
 
 @bot.tree.error
 async def on_app_command_error(
@@ -166,58 +167,6 @@ async def on_app_command_error(
                 message,
                 ephemeral=True
             )
-
-    except discord.HTTPException:
-        pass
-
-
-# ==========================
-# GLOBAL HYBRID/PREFIX COMMAND ERROR HANDLER
-# ==========================
-# Hybrid commands (like /staff) dispatch errors through this event
-# instead of bot.tree.error, even when invoked as a slash command.
-# Without this, a failed check on a hybrid command hangs forever
-# because nothing ever responds to the interaction.
-
-@bot.event
-async def on_command_error(ctx, error):
-
-    if isinstance(error, commands.MissingPermissions):
-
-        message = "❌ You don't have permission to use this command."
-
-    elif isinstance(error, commands.CheckFailure):
-
-        message = "❌ You can't use this command right now."
-
-    else:
-
-        print(f"Unhandled command error: {error}")
-        traceback.print_exc()
-
-        message = "❌ Something went wrong running that command."
-
-    try:
-
-        if ctx.interaction is not None:
-
-            if ctx.interaction.response.is_done():
-
-                await ctx.interaction.followup.send(
-                    message,
-                    ephemeral=True
-                )
-
-            else:
-
-                await ctx.interaction.response.send_message(
-                    message,
-                    ephemeral=True
-                )
-
-        else:
-
-            await ctx.send(message)
 
     except discord.HTTPException:
         pass

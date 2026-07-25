@@ -15,7 +15,9 @@ OWNER_ID = int(
     os.getenv("OWNER_ID", 0)
 )
 
-GUILD_ID = 1523186859172167750
+GUILD_ID = int(
+    os.getenv("GUILD_ID", 1523186859172167750)
+)
 
 
 # ==========================
@@ -41,7 +43,12 @@ LOG_CHANNEL_ID = int(
 
 
 # Staff Logs
-STAFF_LOG_CHANNEL = 1530572095627726970
+STAFF_LOG_CHANNEL = int(
+    os.getenv(
+        "STAFF_LOG_CHANNEL",
+        1530572095627726970
+    )
+)
 
 
 # ==========================

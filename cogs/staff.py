@@ -29,15 +29,13 @@ STAFF_ROLES = {
 }
 
 
-
 class Staff(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
 
 
-
-    @commands.hybrid_command(
+    @app_commands.command(
         name="staff",
         description="Manage FK staff roles"
     )
@@ -81,60 +79,55 @@ class Staff(commands.Cog):
     )
     async def staff(
         self,
-        ctx,
+        interaction: discord.Interaction,
         action: str,
         member: discord.Member,
         role: str
     ):
 
-        await ctx.defer()
+        await interaction.response.defer()
 
         action = action.lower()
         role = role.lower()
 
 
-
         if role not in STAFF_ROLES:
 
-            await ctx.followup.send(
+            await interaction.followup.send(
                 "❌ Invalid staff role."
             )
 
             return
 
 
-
         role_id, role_name = STAFF_ROLES[role]
 
 
-        staff_role = ctx.guild.get_role(
+        staff_role = interaction.guild.get_role(
             role_id
         )
 
 
         if staff_role is None:
 
-            await ctx.followup.send(
+            await interaction.followup.send(
                 "❌ Role not found."
             )
 
             return
 
 
-
         # ADD ROLE
 
         if action == "add":
 
-
             if staff_role in member.roles:
 
-                await ctx.followup.send(
+                await interaction.followup.send(
                     "⚠️ Member already has this role."
                 )
 
                 return
-
 
             try:
 
@@ -144,31 +137,27 @@ class Staff(commands.Cog):
 
             except discord.Forbidden:
 
-                await ctx.followup.send(
+                await interaction.followup.send(
                     "❌ I can't assign this role. My role needs to be "
                     "positioned above it in Server Settings → Roles."
                 )
 
                 return
 
-
             title = "🛡️ Staff Role Added"
-
 
 
         # REMOVE ROLE
 
         elif action == "remove":
 
-
             if staff_role not in member.roles:
 
-                await ctx.followup.send(
+                await interaction.followup.send(
                     "⚠️ Member doesn't have this role."
                 )
 
                 return
-
 
             try:
 
@@ -178,27 +167,23 @@ class Staff(commands.Cog):
 
             except discord.Forbidden:
 
-                await ctx.followup.send(
+                await interaction.followup.send(
                     "❌ I can't remove this role. My role needs to be "
                     "positioned above it in Server Settings → Roles."
                 )
 
                 return
 
-
             title = "🗑️ Staff Role Removed"
-
 
 
         else:
 
-            await ctx.followup.send(
+            await interaction.followup.send(
                 "❌ Action must be add or remove."
             )
 
             return
-
-
 
 
         # RESPONSE EMBED
@@ -209,29 +194,26 @@ class Staff(commands.Cog):
 
                 f"👤 Member: {member.mention}\n"
                 f"🎖️ Prefix: **{role_name}**\n"
-                f"👮 Action by: {ctx.author.mention}"
+                f"👮 Action by: {interaction.user.mention}"
 
             ),
             color=0x8A2BE2
         )
 
 
-        await ctx.followup.send(
+        await interaction.followup.send(
             embed=embed
         )
 
 
-
-
         # STAFF LOGS
 
-        log_channel = ctx.guild.get_channel(
+        log_channel = interaction.guild.get_channel(
             STAFF_LOG_CHANNEL
         )
 
 
         if log_channel:
-
 
             log_embed = discord.Embed(
 
@@ -241,7 +223,7 @@ class Staff(commands.Cog):
 
                     f"👤 **Member:** {member.mention}\n"
                     f"🎖️ **Prefix:** {role_name}\n"
-                    f"👮 **Action by:** {ctx.author.mention}"
+                    f"👮 **Action by:** {interaction.user.mention}"
 
                 ),
 
@@ -254,10 +236,14 @@ class Staff(commands.Cog):
             )
 
 
-            await log_channel.send(
-                embed=log_embed
-            )
+            try:
 
+                await log_channel.send(
+                    embed=log_embed
+                )
+
+            except discord.Forbidden:
+                pass
 
 
 
