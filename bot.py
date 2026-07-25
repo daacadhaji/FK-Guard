@@ -11,13 +11,25 @@ from config import (
 from database.database import setup_database
 
 
-# YOUR SERVER ID HERE
-GUILD_ID = 1523187103494832208
+# ==========================
+# SERVER ID
+# ==========================
 
+GUILD_ID = 1523186859172167750
+
+
+
+# ==========================
+# INTENTS
+# ==========================
 
 intents = discord.Intents.all()
 
 
+
+# ==========================
+# BOT CLASS
+# ==========================
 
 class FKGuard(commands.Bot):
 
@@ -29,10 +41,20 @@ class FKGuard(commands.Bot):
         )
 
 
+
     async def setup_hook(self):
+
+        # ==========================
+        # DATABASE
+        # ==========================
 
         await setup_database()
 
+
+
+        # ==========================
+        # LOAD COGS
+        # ==========================
 
         cogs = [
 
@@ -40,7 +62,8 @@ class FKGuard(commands.Bot):
             "cogs.automod",
             "cogs.logging",
             "cogs.utility",
-            "cogs.owner"
+            "cogs.owner",
+            "cogs.staff"
 
         ]
 
@@ -49,32 +72,76 @@ class FKGuard(commands.Bot):
 
             try:
 
-                await self.load_extension(cog)
+                await self.load_extension(
+                    cog
+                )
 
                 print(
-                    f"Loaded {cog}"
+                    f"✅ Loaded {cog}"
                 )
+
 
             except Exception as e:
 
                 print(
-                    f"{cog}: {e}"
+                    f"❌ Failed loading {cog}"
                 )
 
-
-        # Sync commands globally
-        synced = await self.tree.sync()
+                print(e)
 
 
-        print(
-            f"Synced {len(synced)} slash commands"
-        )
+
+        # ==========================
+        # SYNC GUILD COMMANDS
+        # ==========================
+
+        try:
+
+            guild = discord.Object(
+                id=GUILD_ID
+            )
 
 
+            # Copy loaded slash commands
+            # to this server
+
+            self.tree.copy_global_to(
+                guild=guild
+            )
+
+
+            synced = await self.tree.sync(
+                guild=guild
+            )
+
+
+            print(
+                f"✅ Synced {len(synced)} guild commands"
+            )
+
+
+        except Exception as e:
+
+            print(
+                "❌ Slash sync failed"
+            )
+
+            print(e)
+
+
+
+
+# ==========================
+# CREATE BOT
+# ==========================
 
 bot = FKGuard()
 
 
+
+# ==========================
+# READY EVENT
+# ==========================
 
 @bot.event
 async def on_ready():
@@ -84,11 +151,15 @@ async def on_ready():
     )
 
     print(
-        f"{BOT_NAME} ONLINE"
+        f"🛡️ {BOT_NAME} ONLINE"
     )
 
     print(
-        bot.user
+        f"Bot: {bot.user}"
+    )
+
+    print(
+        f"ID: {bot.user.id}"
     )
 
     print(
@@ -110,7 +181,18 @@ async def on_ready():
 
 
 
+# ==========================
+# START BOT
+# ==========================
+
 async def main():
+
+    if not TOKEN:
+
+        raise ValueError(
+            "❌ TOKEN missing from .env"
+        )
+
 
     async with bot:
 
