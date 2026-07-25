@@ -29,52 +29,80 @@ STAFF_ROLES = {
 }
 
 
+
 class Staff(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
 
 
-@commands.hybrid_command(
-    name="staff",
-    description="Manage FK staff roles"
-)
-@app_commands.describe(
-    action="Choose add or remove",
-    member="Select staff member",
-    role="Choose staff role"
-)
-@app_commands.choices(
-    action=[
-        app_commands.Choice(name="Add", value="add"),
-        app_commands.Choice(name="Remove", value="remove")
-    ],
-    role=[
-        app_commands.Choice(name="🛡️ FK Head", value="head"),
-        app_commands.Choice(name="⚙️ FK Admin", value="admin"),
-        app_commands.Choice(name="🔨 FK Moderator", value="moderator"),
-        app_commands.Choice(name="🎫 FK Ticket", value="ticket")
-    ]
-)
-@commands.has_permissions(administrator=True)
-async def staff(
-    self,
-    ctx,
-    action: str,
-    member: discord.Member,
-    role: str
-):
+
+    @commands.hybrid_command(
+        name="staff",
+        description="Manage FK staff roles"
+    )
+    @app_commands.describe(
+        action="Choose add or remove",
+        member="Select staff member",
+        role="Choose staff role"
+    )
+    @app_commands.choices(
+        action=[
+            app_commands.Choice(
+                name="Add",
+                value="add"
+            ),
+            app_commands.Choice(
+                name="Remove",
+                value="remove"
+            )
+        ],
+        role=[
+            app_commands.Choice(
+                name="🛡️ FK Head",
+                value="head"
+            ),
+            app_commands.Choice(
+                name="⚙️ FK Admin",
+                value="admin"
+            ),
+            app_commands.Choice(
+                name="🔨 FK Moderator",
+                value="moderator"
+            ),
+            app_commands.Choice(
+                name="🎫 FK Ticket",
+                value="ticket"
+            )
+        ]
+    )
+    @commands.has_permissions(
+        administrator=True
+    )
+    async def staff(
+        self,
+        ctx,
+        action: str,
+        member: discord.Member,
+        role: str
+    ):
+
+        await ctx.defer()
+
 
         action = action.lower()
         role = role.lower()
 
 
+
         if role not in STAFF_ROLES:
 
-            await ctx.send(
-                "❌ Roles: head, admin, moderator, ticket"
+            await ctx.followup.send(
+                "❌ Invalid staff role."
             )
+
             return
+
 
 
         role_id, role_name = STAFF_ROLES[role]
@@ -87,52 +115,57 @@ async def staff(
 
         if staff_role is None:
 
-            await ctx.send(
+            await ctx.followup.send(
                 "❌ Role not found."
             )
+
             return
 
 
 
-        # ==========================
-        # ADD STAFF ROLE
-        # ==========================
+        # ADD ROLE
 
         if action == "add":
 
+
             if staff_role in member.roles:
 
-                await ctx.send(
+                await ctx.followup.send(
                     "⚠️ Member already has this role."
                 )
+
                 return
+
 
 
             await member.add_roles(
                 staff_role
             )
 
+
             title = "🛡️ Staff Role Added"
 
 
 
-        # ==========================
-        # REMOVE STAFF ROLE
-        # ==========================
+        # REMOVE ROLE
 
         elif action == "remove":
 
+
             if staff_role not in member.roles:
 
-                await ctx.send(
+                await ctx.followup.send(
                     "⚠️ Member doesn't have this role."
                 )
+
                 return
+
 
 
             await member.remove_roles(
                 staff_role
             )
+
 
             title = "🗑️ Staff Role Removed"
 
@@ -140,37 +173,38 @@ async def staff(
 
         else:
 
-            await ctx.send(
-                "❌ Action must be `add` or `remove`"
+            await ctx.followup.send(
+                "❌ Action must be add or remove."
             )
+
             return
 
 
 
-        # ==========================
-        # RESPONSE
-        # ==========================
+
+        # RESPONSE EMBED
 
         embed = discord.Embed(
             title=title,
             description=(
+
                 f"👤 Member: {member.mention}\n"
-                f"🎖️ Role: **{role_name}**\n"
+                f"🎖️ Prefix: **{role_name}**\n"
                 f"👮 Action by: {ctx.author.mention}"
+
             ),
             color=0x8A2BE2
         )
 
 
-        await ctx.send(
+        await ctx.followup.send(
             embed=embed
         )
 
 
 
-        # ==========================
+
         # STAFF LOGS
-        # ==========================
 
         log_channel = ctx.guild.get_channel(
             STAFF_LOG_CHANNEL
@@ -179,13 +213,19 @@ async def staff(
 
         if log_channel:
 
+
             log_embed = discord.Embed(
+
                 title=title,
+
                 description=(
+
                     f"👤 **Member:** {member.mention}\n"
-                    f"🎖️ **Role:** {role_name}\n"
+                    f"🎖️ **Prefix:** {role_name}\n"
                     f"👮 **Action by:** {ctx.author.mention}"
+
                 ),
+
                 color=0x8A2BE2
             )
 
@@ -198,6 +238,7 @@ async def staff(
             await log_channel.send(
                 embed=log_embed
             )
+
 
 
 
