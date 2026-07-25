@@ -126,9 +126,9 @@ bot = FKGuard()
 # ==========================
 # GLOBAL SLASH COMMAND ERROR HANDLER
 # ==========================
-# Without this, any failed permission check or unhandled exception
-# in a slash command leaves the interaction with no response, which
-# is why it just shows "thinking..." forever in Discord.
+# Handles errors from plain app_commands.command slash commands.
+# Without this, a failed permission check or unhandled exception
+# leaves the interaction with no response ("thinking..." forever).
 
 @bot.tree.error
 async def on_app_command_error(
@@ -166,6 +166,58 @@ async def on_app_command_error(
                 message,
                 ephemeral=True
             )
+
+    except discord.HTTPException:
+        pass
+
+
+# ==========================
+# GLOBAL HYBRID/PREFIX COMMAND ERROR HANDLER
+# ==========================
+# Hybrid commands (like /staff) dispatch errors through this event
+# instead of bot.tree.error, even when invoked as a slash command.
+# Without this, a failed check on a hybrid command hangs forever
+# because nothing ever responds to the interaction.
+
+@bot.event
+async def on_command_error(ctx, error):
+
+    if isinstance(error, commands.MissingPermissions):
+
+        message = "❌ You don't have permission to use this command."
+
+    elif isinstance(error, commands.CheckFailure):
+
+        message = "❌ You can't use this command right now."
+
+    else:
+
+        print(f"Unhandled command error: {error}")
+        traceback.print_exc()
+
+        message = "❌ Something went wrong running that command."
+
+    try:
+
+        if ctx.interaction is not None:
+
+            if ctx.interaction.response.is_done():
+
+                await ctx.interaction.followup.send(
+                    message,
+                    ephemeral=True
+                )
+
+            else:
+
+                await ctx.interaction.response.send_message(
+                    message,
+                    ephemeral=True
+                )
+
+        else:
+
+            await ctx.send(message)
 
     except discord.HTTPException:
         pass
