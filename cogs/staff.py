@@ -76,7 +76,7 @@ class Staff(commands.Cog):
             )
         ]
     )
-    @commands.has_permissions(
+    @app_commands.checks.has_permissions(
         administrator=True
     )
     async def staff(
@@ -136,10 +136,20 @@ class Staff(commands.Cog):
                 return
 
 
+            try:
 
-            await member.add_roles(
-                staff_role
-            )
+                await member.add_roles(
+                    staff_role
+                )
+
+            except discord.Forbidden:
+
+                await ctx.followup.send(
+                    "❌ I can't assign this role. My role needs to be "
+                    "positioned above it in Server Settings → Roles."
+                )
+
+                return
 
 
             title = "🛡️ Staff Role Added"
@@ -160,10 +170,20 @@ class Staff(commands.Cog):
                 return
 
 
+            try:
 
-            await member.remove_roles(
-                staff_role
-            )
+                await member.remove_roles(
+                    staff_role
+                )
+
+            except discord.Forbidden:
+
+                await ctx.followup.send(
+                    "❌ I can't remove this role. My role needs to be "
+                    "positioned above it in Server Settings → Roles."
+                )
+
+                return
 
 
             title = "🗑️ Staff Role Removed"
