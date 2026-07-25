@@ -1,7 +1,9 @@
+import asyncio
+import traceback
+
 import discord
 from discord.ext import commands
-import asyncio
-
+from discord import app_commands
 
 from config import (
     TOKEN,
@@ -18,13 +20,11 @@ from database.database import setup_database
 GUILD_ID = 1523186859172167750
 
 
-
 # ==========================
 # INTENTS
 # ==========================
 
 intents = discord.Intents.all()
-
 
 
 # ==========================
@@ -41,7 +41,6 @@ class FKGuard(commands.Bot):
         )
 
 
-
     async def setup_hook(self):
 
         # ==========================
@@ -49,7 +48,6 @@ class FKGuard(commands.Bot):
         # ==========================
 
         await setup_database()
-
 
 
         # ==========================
@@ -72,23 +70,19 @@ class FKGuard(commands.Bot):
 
             try:
 
-                await self.load_extension(
-                    cog
-                )
+                await self.load_extension(cog)
 
                 print(
                     f"✅ Loaded {cog}"
                 )
 
-
-            except Exception as e:
+            except Exception:
 
                 print(
                     f"❌ Failed loading {cog}"
                 )
 
-                print(e)
-
+                traceback.print_exc()
 
 
         # ==========================
@@ -101,34 +95,31 @@ class FKGuard(commands.Bot):
                 id=GUILD_ID
             )
 
-
-            # Copy loaded slash commands
-            # to this server
-
-            self.tree.copy_global_to(
+            # Remove previously synced guild commands
+            self.tree.clear_commands(
                 guild=guild
             )
 
+            # Copy all loaded commands
+            self.tree.copy_global_to(
+                guild=guild
+            )
 
             synced = await self.tree.sync(
                 guild=guild
             )
 
-
             print(
                 f"✅ Synced {len(synced)} guild commands"
             )
 
-
-        except Exception as e:
+        except Exception:
 
             print(
                 "❌ Slash sync failed"
             )
 
-            print(e)
-
-
+            traceback.print_exc()
 
 
 # ==========================
@@ -137,6 +128,53 @@ class FKGuard(commands.Bot):
 
 bot = FKGuard()
 
+
+# ==========================
+# GLOBAL SLASH COMMAND ERROR HANDLER
+# ==========================
+# Without this, any failed permission check or unhandled exception
+# in a slash command leaves the interaction with no response, which
+# is why it just shows "thinking..." forever in Discord.
+
+@bot.tree.error
+async def on_app_command_error(
+    interaction: discord.Interaction,
+    error: app_commands.AppCommandError
+):
+
+    if isinstance(error, app_commands.MissingPermissions):
+
+        message = "❌ You don't have permission to use this command."
+
+    elif isinstance(error, app_commands.CheckFailure):
+
+        message = "❌ You can't use this command right now."
+
+    else:
+
+        print(f"Unhandled app command error: {error}")
+        traceback.print_exc()
+
+        message = "❌ Something went wrong running that command."
+
+    try:
+
+        if interaction.response.is_done():
+
+            await interaction.followup.send(
+                message,
+                ephemeral=True
+            )
+
+        else:
+
+            await interaction.response.send_message(
+                message,
+                ephemeral=True
+            )
+
+    except discord.HTTPException:
+        pass
 
 
 # ==========================
@@ -166,7 +204,6 @@ async def on_ready():
         "━━━━━━━━━━━━━━━━"
     )
 
-
     await bot.change_presence(
 
         activity=discord.Activity(
@@ -178,7 +215,6 @@ async def on_ready():
         )
 
     )
-
 
 
 # ==========================
@@ -193,13 +229,11 @@ async def main():
             "❌ TOKEN missing from .env"
         )
 
-
     async with bot:
 
-        await bot.start(
-            TOKEN
-        )
+        await bot.start(TOKEN)
 
 
+if __name__ == "__main__":
 
-asyncio.run(main())
+    asyncio.run(main())
