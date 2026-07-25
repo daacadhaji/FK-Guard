@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 
 from config import STAFF_LOG_CHANNEL
 
@@ -34,18 +35,35 @@ class Staff(commands.Cog):
         self.bot = bot
 
 
-    @commands.hybrid_command(
-        name="staff",
-        description="Manage FK staff roles"
-    )
-    @commands.has_permissions(administrator=True)
-    async def staff(
-        self,
-        ctx,
-        action: str,
-        member: discord.Member,
-        role: str
-    ):
+@commands.hybrid_command(
+    name="staff",
+    description="Manage FK staff roles"
+)
+@app_commands.describe(
+    action="Choose add or remove",
+    member="Select staff member",
+    role="Choose staff role"
+)
+@app_commands.choices(
+    action=[
+        app_commands.Choice(name="Add", value="add"),
+        app_commands.Choice(name="Remove", value="remove")
+    ],
+    role=[
+        app_commands.Choice(name="🛡️ FK Head", value="head"),
+        app_commands.Choice(name="⚙️ FK Admin", value="admin"),
+        app_commands.Choice(name="🔨 FK Moderator", value="moderator"),
+        app_commands.Choice(name="🎫 FK Ticket", value="ticket")
+    ]
+)
+@commands.has_permissions(administrator=True)
+async def staff(
+    self,
+    ctx,
+    action: str,
+    member: discord.Member,
+    role: str
+):
 
         action = action.lower()
         role = role.lower()
